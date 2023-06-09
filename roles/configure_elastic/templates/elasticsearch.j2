@@ -1,0 +1,25 @@
+cluster.name: {{ cluster_name }}
+
+node.name: {{ inventory_hostname }}
+node.roles: [ data, master ]
+
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+
+network.host: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}
+
+discovery.seed_hosts: [{% for host in groups['elasticsearch-group'] %}"{{ hostvars[host]['ansible_default_ipv4']['address'] }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+cluster.initial_master_nodes: ["{{ groups['elasticsearch-master'][0] }}"]
+
+xpack.security:
+  enabled: true
+  http.ssl.enabled: true
+  transport.ssl.enabled: true
+  http.ssl.key: certs/{{ inventory_hostname }}.key
+  http.ssl.certificate: certs/{{ inventory_hostname }}.crt
+  http.ssl.certificate_authorities: certs/ca.crt
+  transport.ssl.verification_mode: certificate 
+  transport.ssl.client_authentication: required
+  transport.ssl.key: certs/{{ inventory_hostname }}.key
+  transport.ssl.certificate: certs/{{ inventory_hostname }}.crt
+  transport.ssl.certificate_authorities: certs/ca.crt

@@ -1,0 +1,26 @@
+- name: Create MongoDB keys directory
+  file:
+    path: /etc/mongodb/keys/
+    state: directory
+
+- name: Generate MongoDB key
+  ansible.builtin.copy:
+    content: "{{ lookup('community.general.random_string', base64=True, length=756) }}"
+    dest: /etc/mongodb/keys/mongo-key
+  run_once: true
+  when: "inventory_hostname == 'mongodb_node0'"
+
+- name: Fetch the file from the node0 to master
+  ansible.builtin.fetch:
+    src: /etc/mongodb/keys/mongo-key 
+    dest: /tmp/buffer/
+    flat: yes
+  when: "inventory_hostname == 'mongodb_node0'"
+
+- name: Copy the file from master to secondaries
+  ansible.builtin.copy:
+    src: /tmp/buffer/
+    dest: /etc/mongodb/keys/
+    owner: mongodb
+    group: mongodb
+    mode: '400' 

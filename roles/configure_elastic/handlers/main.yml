@@ -1,0 +1,18 @@
+---
+- name: Starting elasticsearch service
+  ansible.builtin.systemd:
+    state: started 
+    name: elasticsearch 
+    enabled: true
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['elasticsearch-group'] }}"
+  when: inventory_hostname == groups['elasticsearch-master'][0]
+
+- name: Restarting elasticsearch service
+  ansible.builtin.systemd:
+    state: restarted 
+    name: elasticsearch 
+    enabled: true
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['elasticsearch-group'] }}"
+  when: inventory_hostname == groups['elasticsearch-master'][0]

@@ -1,0 +1,27 @@
+- name: Set BindIP
+  replace:
+      path: /etc/mongod.conf
+      regexp: '^  bindIp: 127.0.0.1.*'
+      replace: '  bindIp: 127.0.0.1,{{ item }}'
+      backup: yes
+  with_items:
+    - "{{ ansible_default_ipv4.address }}"
+
+- name: Set up mongodb security
+  replace:
+      path: /etc/mongod.conf
+      regexp: '^#security.*'  
+      replace: 'security:\n  keyFile:  /etc/mongodb/keys/mongo-key'
+      backup: yes
+
+- name: Allow mongodb replica set
+  replace:
+      path: /etc/mongod.conf
+      regexp: '^#replication:'
+      replace: 'replication:\n  replSetName: "rs0"'
+      backup: yes
+
+- name: Make sure a Mongodb service unit is running
+  ansible.builtin.systemd:
+    state: restarted 
+    name: mongod 

@@ -1,0 +1,21 @@
+---
+- name: Install postgresql dependency
+  ansible.builtin.apt:
+    name:
+      - libpq-dev
+      - python3-psycopg2
+    state: present
+
+- name: Add key for Postgres repo
+  apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
+
+- name: Add Postgres repo to sources list
+  apt_repository: repo='deb http://apt.postgresql.org/pub/repos/apt {{ distro }}-pgdg main' state=present update_cache_retries=15
+
+- name: Install PostgreSQL and client
+  apt:
+    name: ['postgresql-{{ postgresql_version }}',
+           'postgresql-client-{{ postgresql_version }}'] 
+    state: present
+    
+  notify: start postgresql

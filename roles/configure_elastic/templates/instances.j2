@@ -1,0 +1,6 @@
+instances:
+{% for host in groups['elasticsearch-group'] %}
+  - name: '{{ host }}'
+    ip: ['{{ hostvars[host]['ansible_default_ipv4']['address'] }}']
+{% if not loop.last %}{{ "\n" }}{% endif %}
+{% endfor %}

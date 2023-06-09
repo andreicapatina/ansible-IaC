@@ -1,0 +1,38 @@
+---
+- name: Install gnu packages
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - python3-pip
+    state: present
+      
+- name: Install required Python library (pymongo) 
+  ansible.builtin.pip:
+    name: pymongo==4.3.3
+
+- name: Add key for Mongodb repo
+  apt_key: url=https://www.mongodb.org/static/pgp/server-{{ mongodb_version }}.asc state=present
+
+- name: Add Mongodb repo to sources list
+  apt_repository: repo='deb http://repo.mongodb.org/apt/debian bullseye/mongodb-org/{{ mongodb_version }} main' state=present update_cache_retries=15
+
+- name: Install Mongodb
+  ansible.builtin.apt:
+    name: 
+      - mongodb-org
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    force_apt_get: yes
+
+- name: test
+  ansible.builtin.shell: echo something
+  notify: Start mongodb service
+
+- meta: flush_handlers
+...
+# - name: Make sure a Mongodb service unit is running
+#   ansible.builtin.systemd:
+#     state: started 
+#     name: mongod 
+#     enabled: true

@@ -1,0 +1,11 @@
+---
+- hosts: mongodb-group
+  become: true
+  roles:
+    - role: mongo_install
+      tags:
+        - install
+
+    - role: configure_mongo
+      tags:
+        - configure

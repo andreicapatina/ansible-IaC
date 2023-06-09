@@ -1,0 +1,10 @@
+- name: Allow incoming traffic on port 27017 from nodes
+  ufw:
+    rule: allow
+    from_ip: '{{ item }}'
+    port: 27017
+  with_items:
+    - "{{ hostvars[ 'mongodb_node0' ].ansible_default_ipv4.address }}"
+    - "{{ hostvars[ 'mongodb_node1' ].ansible_default_ipv4.address }}"
+    - "{{ hostvars[ 'mongodb_node2' ].ansible_default_ipv4.address }}"
+    - "{{ ansible_env['SSH_CLIENT'].split() | first }}"

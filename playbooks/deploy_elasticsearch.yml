@@ -1,0 +1,11 @@
+---
+- hosts: elasticsearch-group
+  become: true
+  roles:
+    - role: elastic_install
+      tags:
+        - install
+
+    - role: configure_elastic
+      tags:
+        - configure

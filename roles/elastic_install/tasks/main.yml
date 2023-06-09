@@ -1,0 +1,10 @@
+---
+- name: Install Elasticsearch verion 7
+  include_tasks: install_elastic_v7.yml
+  when:
+    - '"7" in ansible_run_tags'
+
+- name: Install Elasticsearch verion 8
+  include_tasks: install_elastic_v8.yml
+  when:
+    - '"8" in ansible_run_tags'

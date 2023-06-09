@@ -1,0 +1,78 @@
+---
+- block:
+  - name: Create directory for generate certificates
+    ansible.builtin.file:
+      path: /opt/cert
+      state: directory
+
+  - name: Writing instances for certificates
+    ansible.builtin.template:
+      src: instances.j2
+      dest: /opt/cert/instances.yml
+
+  - name: Check if ca zip file exists
+    ansible.builtin.stat: 
+      path: /opt/cert/cert.zip
+    register: if_ca_exist
+
+  - name: Generate certificates
+    ansible.builtin.shell: |
+      /usr/share/elasticsearch/bin/elasticsearch-certutil ca --pem --out /opt/cert/cert.zip
+    environment: 
+      ES_JAVA_HOME: "/usr/share/elasticsearch/jdk"
+    when: if_ca_exist.stat.exists == false
+
+  - name: Create directory for extracting certificates
+    ansible.builtin.file:
+      path: /opt/cert/cert
+      state: directory
+
+  - name: Extract certificate authority
+    ansible.builtin.unarchive:
+      src: /opt/cert/cert.zip
+      dest: /opt/cert/cert
+      remote_src: yes
+
+  - name: Check if certs zip file exists
+    ansible.builtin.stat: 
+      path: /opt/cert/certs.zip
+    register: if_certs_exist
+
+  - name: Generate certificates
+    ansible.builtin.shell: |
+      /usr/share/elasticsearch/bin/elasticsearch-certutil cert --silent --in /opt/cert/instances.yml --out /opt/cert/certs.zip --ca-cert /opt/cert/cert/ca/ca.crt --ca-key /opt/cert/cert/ca/ca.key --pem
+    environment: 
+      ES_JAVA_HOME: "/usr/share/elasticsearch/jdk"
+    when: if_certs_exist.stat.exists == false
+
+  - name: Create directory for extracting certificates
+    ansible.builtin.file:
+      path: /opt/cert/certs
+      state: directory
+
+  - name: Extract certs
+    ansible.builtin.unarchive:
+      src: /opt/cert/certs.zip
+      dest: /opt/cert/certs
+      remote_src: yes
+
+  - ansible.builtin.find: 
+      paths: "/opt/cert/certs" 
+      recurse: yes 
+    register: files_to_copy
+
+  - ansible.builtin.debug:
+      msg: "{{ files_to_copy }}"
+
+  - ansible.builtin.fetch: 
+      src: "/opt/cert/cert/ca/ca.crt" 
+      dest: /tmp/elastic-certs/
+      flat: true        
+
+  - ansible.builtin.fetch: 
+      src: "{{ item.path }}" 
+      dest: /tmp/elastic-certs/     
+      flat: true   
+    with_items: "{{ files_to_copy.files }}"
+
+  when: inventory_hostname == groups['elasticsearch-master'][0]

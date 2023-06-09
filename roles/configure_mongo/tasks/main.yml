@@ -1,0 +1,47 @@
+---
+- include: gen_keys.yml
+- include: set_firewall.yml
+- include: mongo_conf_file.yml
+
+- name: Init replicaset 
+  community.mongodb.mongodb_replicaset:
+    login_host: localhost 
+    login_database: "admin"
+    replica_set: "{{ replica_set_name }}"
+    members: 
+      - "{{ hostvars[ 'mongodb_node0' ].ansible_default_ipv4.address }}:27017"
+      - "{{ hostvars[ 'mongodb_node1' ].ansible_default_ipv4.address }}:27017"
+      - "{{ hostvars[ 'mongodb_node2' ].ansible_default_ipv4.address }}:27017"
+  when: "inventory_hostname == 'mongodb_node0'"
+  run_once: true
+
+- name: Wait for replica set initialization
+  ansible.builtin.wait_for:
+    timeout: 15 
+
+- name: Create admin user with role="root" for admin database
+  community.mongodb.mongodb_user:
+    login_host: localhost
+    login_port: "27017"
+    database: "admin"
+    name: "{{ admin_user_name }}" 
+    password: "{{ admin_user_pass }}"
+    roles:
+      - { db: "admin", role: "root"}
+  run_once: true
+  ignore_errors: true
+
+- name: Create "user1" database for user "user1" with role "readwrite" 
+  community.mongodb.mongodb_user:
+    login_host: localhost
+    login_port: "27017"
+    login_user: "{{ admin_user_name }}"
+    login_password: "{{ admin_user_pass }}"  
+    database: "{{ user_db_name }}" 
+    name: "{{ user_name }}" 
+    password: "{{ user_pass }}"
+    roles: 
+      - { db: "{{ user_db_name }}", role: "readWrite"}
+    state: present
+  run_once: true
+  ignore_errors: true

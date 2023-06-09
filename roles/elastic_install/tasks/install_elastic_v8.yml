@@ -1,0 +1,32 @@
+---
+- name: Install requirements
+  apt:
+    name: 
+      - unzip
+    state: present
+
+- name: Check if elasticsearch is installed
+  command: dpkg-query -W elasticsearch
+  register: check_package_deb
+  failed_when: check_package_deb.rc > 1
+  changed_when: check_package_deb.rc == 1 # rc is the (return code) of the executing command
+  
+- name: Download elastic package
+  ansible.builtin.get_url:
+    url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.7.0-amd64.deb"
+    dest: ./
+  when: check_package_deb.rc == 1
+
+- name: Install elasticsearch
+  ansible.builtin.apt:
+    deb: elasticsearch-8.7.0-amd64.deb
+  register: builtin_pass
+  when: check_package_deb.rc == 1
+
+# - name: Show builtin password for elastic user
+#   debug:
+#     msg: "{{ builtin_pass.stdout_lines[12].split() | last }}"
+#   when: check_package_deb.rc == 1
+
+
+    

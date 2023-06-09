@@ -1,0 +1,21 @@
+---
+- name: Check if user is already exists
+  ansible.builtin.shell: |
+    /usr/share/elasticsearch/bin/elasticsearch-users list
+  register: data
+
+- name: Create user 
+  ansible.builtin.shell: |
+    /usr/share/elasticsearch/bin/elasticsearch-users useradd {{ user_name }} -p {{ user_password }} -r superuser
+  no_log: true
+  when: data.stdout_lines | regex_search(user_name) is none
+
+
+# - name: Test
+#   ansible.builtin.debug:
+#     msg: "{{ data.stdout_lines | regex_search( user_name ) }}"
+
+# - name: Delete user 
+#   ansible.builtin.shell: |
+#     /usr/share/elasticsearch/bin/elasticsearch-users userdel {{ user_name }}
+#   no_log: true

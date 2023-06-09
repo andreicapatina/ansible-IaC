@@ -1,0 +1,39 @@
+---
+- name: Generating certs for elasticsearch v7
+  include_tasks: gen_certs_ES7.yml
+  when:
+    - '"7" in ansible_run_tags'
+
+- name: Generating certs for elasticsearch v8
+  include_tasks: gen_certs_ES8.yml
+  when:
+    - '"8" in ansible_run_tags'
+
+- name: Copy certs to all nodes
+  include_tasks: copy_certs_to_each_hosts.yml
+
+- name: Writing config for each node
+  ansible.builtin.template:
+    src: elasticsearch.j2
+    dest: /etc/elasticsearch/elasticsearch.yml
+
+- meta: flush_handlers
+
+- name: Create user
+  include_tasks: create_user.yml
+
+
+# - name: Install curl
+#   apt:
+#     name: curl
+#     state: present
+
+# - name: Test
+#   ansible.builtin.shell: curl --cacert /opt/cert/cert/ca/ca.crt -u myuser:qqqqqq 'https://192.168.88.151:9200/_cat/nodes?v'
+#   register: is_connected
+#   when: inventory_hostname == 'elastic_node0'
+
+# - name: Test2
+#   debug:
+#     msg: "{{ is_connected.stdout_lines }}"
+#   when: inventory_hostname == 'elastic_node0'

@@ -1,0 +1,29 @@
+---
+- name: Restart NTP service
+  systemd:
+    name: ntp.service
+    state: restarted
+
+- name: Install requirements
+  apt:
+    name: 
+      - apt-transport-https
+      - unzip
+    state: present
+
+- name: Add key for elastic repo
+  apt_key: 
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+
+- name: Add elasticsearch repo to sources list
+  apt_repository: 
+    repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main" 
+    filename: elastic-7.x.list 
+    state: present 
+    update_cache_retries: 15
+
+- name: Install elasticsearch
+  apt:
+    name: elasticsearch
+    state: present
